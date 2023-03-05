@@ -7,14 +7,13 @@ import javafx.stage.Stage;
 import org.jfree.fx.FXGraphics2D;
 
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
 
 public class ParticleFlow extends Application {
     private FXGraphics2D graphics;
     private final int GRID_WIDTH = 50;
     private final int GRID_HEIGHT = 25;
     private final int GRID_SIZE = 25;
-    private Obstacle[] obstacleGrid;
+    private Tile[] grid;
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -33,8 +32,7 @@ public class ParticleFlow extends Application {
 
             @Override
             public void handle(long now) {
-                if (last == -1)
-                    last = now;
+                if (last == -1) last = now;
                 double deltaTime = (now - last) / 1000000000.0;
                 update(deltaTime);
                 last = now;
@@ -46,12 +44,12 @@ public class ParticleFlow extends Application {
     }
 
     private void initGrid() {
-        obstacleGrid = new Obstacle[GRID_WIDTH * GRID_HEIGHT];
+        grid = new NonTraversableTile[GRID_WIDTH * GRID_HEIGHT];
         for (int x = 0; x < GRID_WIDTH; x++) {
             for (int y = 0; y < GRID_HEIGHT; y++) {
                 // Create borders
                 if (x == 0 || x == GRID_WIDTH - 1 || y == 0 || y == GRID_HEIGHT - 1)
-                    obstacleGrid[x * GRID_HEIGHT + y] = new Obstacle(new Vector2D(x, y), GRID_SIZE);
+                    grid[x * GRID_HEIGHT + y] = new NonTraversableTile(new Vector2D(x, y), GRID_SIZE);
             }
         }
     }
@@ -59,8 +57,7 @@ public class ParticleFlow extends Application {
     private void draw() {
         for (int x = 0; x < GRID_WIDTH; x++) {
             for (int y = 0; y < GRID_HEIGHT; y++) {
-                if (obstacleGrid[x * GRID_HEIGHT + y] != null)
-                    obstacleGrid[x * GRID_HEIGHT + y].draw(graphics);
+                if (grid[x * GRID_HEIGHT + y] != null) grid[x * GRID_HEIGHT + y].draw(graphics);
             }
         }
     }

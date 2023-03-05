@@ -3,15 +3,21 @@ import org.jfree.fx.FXGraphics2D;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 
-public class Obstacle {
+public class NonTraversableTile implements Tile {
     private Vector2D position;
     private int size;
 
-    public Obstacle(Vector2D position, int size) {
+    public NonTraversableTile(Vector2D position, int size) {
         this.position = position;
         this.size = size;
     }
 
+    @Override
+    public double getDistance() {
+        return -1;
+    }
+
+    @Override
     public void draw(FXGraphics2D graphics) {
         graphics.fill(getShape());
     }
