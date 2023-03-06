@@ -61,7 +61,7 @@ public class ParticleFlow extends Application {
             for (int y = 0; y < GRID_HEIGHT; y++) {
                 // Create borders
                 if (x == 0 || x == GRID_WIDTH - 1 || y == 0 || y == GRID_HEIGHT - 1
-//                        || Math.random() > .6
+                        || Math.random() > .80
                 )
                     grid[x * GRID_HEIGHT + y] = new NonTraversableTile(new Point(x, y), GRID_SIZE);
                 else

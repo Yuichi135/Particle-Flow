@@ -54,7 +54,7 @@ public class TraversableTile implements Tile {
         double y = position.getY() * size + size/2.0;
 
 //        System.out.println(directionVector);
-
+        graphics.draw(new Rectangle2D.Double(x - 2, y - 2, 4, 4));
         graphics.draw(new Line2D.Double(x, y, x + directionVector.getX(), y + directionVector.getY()));
     }
 }

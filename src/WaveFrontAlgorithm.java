@@ -1,8 +1,6 @@
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.PriorityQueue;
-import java.util.Vector;
 import java.util.stream.Collectors;
 
 public class WaveFrontAlgorithm {
@@ -107,8 +105,23 @@ public class WaveFrontAlgorithm {
         if (directNeighbours.size() == 4) {
             directionVector.setX(directNeighbours.get(0).getDistance() - directNeighbours.get(1).getDistance());
             directionVector.setY(directNeighbours.get(2).getDistance() - directNeighbours.get(3).getDistance());
+
+            ArrayList<Tile> diagonalNeighbours = (ArrayList<Tile>) getDiagonalNeighbours(grid, tile).stream().filter(neighbour -> neighbour.getDistance() != -1).collect(Collectors.toList());
+            if (diagonalNeighbours.size() == 4) {
+                double forceTop = diagonalNeighbours.get(0).getDistance() + diagonalNeighbours.get(2).getDistance();
+                double forceBottom = diagonalNeighbours.get(1).getDistance() + diagonalNeighbours.get(3).getDistance();
+                double forceLeft = diagonalNeighbours.get(0).getDistance() + diagonalNeighbours.get(1).getDistance();
+                double forceRight = diagonalNeighbours.get(2).getDistance() + diagonalNeighbours.get(3).getDistance();
+
+                diagonalDirectionVector.setX(forceBottom - forceTop);
+                diagonalDirectionVector.setY(forceLeft - forceRight);
+                diagonalDirectionVector.rotate(-90);
+            }
         } else {
             ArrayList<Tile> allNeighbours = (ArrayList<Tile>) getAllNeighbours(grid, tile).stream().filter(neighbour -> neighbour.getDistance() != -1).collect(Collectors.toList());
+
+            if (allNeighbours.size() == 0)
+                return;
 
             Tile closest = allNeighbours.get(0);
             for (Tile neighbour : allNeighbours) {
@@ -123,19 +136,7 @@ public class WaveFrontAlgorithm {
 
             directionVector.setLocation(tile.getPosition());
             directionVector.subtract(closest.getPosition());
-        }
-
-
-        ArrayList<Tile> diagonalNeighbours = getDiagonalNeighbours(grid, tile);
-        if (diagonalNeighbours.size() == 4) {
-            double forceTop = diagonalNeighbours.get(0).getDistance() + diagonalNeighbours.get(2).getDistance();
-            double forceBottom = diagonalNeighbours.get(1).getDistance() + diagonalNeighbours.get(3).getDistance();
-            double forceLeft = diagonalNeighbours.get(0).getDistance() + diagonalNeighbours.get(1).getDistance();
-            double forceRight = diagonalNeighbours.get(2).getDistance() + diagonalNeighbours.get(3).getDistance();
-
-            diagonalDirectionVector.setX(forceBottom - forceTop);
-            diagonalDirectionVector.setY(forceLeft - forceRight);
-            diagonalDirectionVector.rotate(-90);
+            directionVector.scale(-1);
         }
 
         directionVector.add(diagonalDirectionVector);
