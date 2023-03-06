@@ -9,12 +9,9 @@ public class WaveFrontAlgorithm {
     public WaveFrontAlgorithm(int width, int height) {
         this.width = width;
         this.height = height;
-
-        System.out.println("Init WFA");
     }
 
     public void updateGrid(Tile[] grid, Point goalPoint) {
-        System.out.println("Update WFM");
         resetGrid(grid);
         Tile goal = grid[goalPoint.x * height + goalPoint.y];
         goal.setDistance(0);
