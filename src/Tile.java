@@ -9,4 +9,5 @@ public interface Tile {
     Vector2D getDirectionVector();
     void setDirectionVector(Vector2D vector);
     void draw(FXGraphics2D graphics);
+    Shape getShape();
 }

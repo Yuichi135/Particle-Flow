@@ -30,12 +30,20 @@ public class Particle {
         this.positionOld = (Vector2D) position;
     }
 
+    public void setPositionX(double newX) {
+        position.setX(newX);
+    }
+
+    public void setPositionY(double newY) {
+        position.setY(newY);
+    }
+
     public void update(double deltaTime) {
         acceleration.scale(deltaTime * deltaTime);
 
         Vector2D velocity = VectorMath.subtract(position, positionOld);
-        if (velocity.getLength() > 10)
-            velocity.setLength(10);
+        if (velocity.getLength() > 5)
+            velocity.setLength(5);
 
         positionOld = position;
         position = VectorMath.sum(position, velocity, acceleration);
@@ -45,7 +53,7 @@ public class Particle {
 
     public void applyForce(Vector2D force) {
         if (force != null)
-            acceleration.add(VectorMath.scale(force, 100));
+            acceleration.add(VectorMath.scale(force, 250));
     }
 
     public void draw(FXGraphics2D graphics) {
@@ -56,7 +64,7 @@ public class Particle {
         graphics.setColor(Color.WHITE);
     }
 
-    private Shape getShape() {
+    public Shape getShape() {
         return new Rectangle2D.Double(position.getX() - size / 2, position.getY() - size / 2, size, size);
     }
 }

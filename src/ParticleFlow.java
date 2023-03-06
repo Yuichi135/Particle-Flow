@@ -9,14 +9,15 @@ import javafx.stage.Stage;
 import org.jfree.fx.FXGraphics2D;
 
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 public class ParticleFlow extends Application {
     private FXGraphics2D graphics;
-    private final int GRID_WIDTH = 100;
-    private final int GRID_HEIGHT = 50;
-    private final int GRID_SIZE = 12;
+    private final int GRID_WIDTH = 25;
+    private final int GRID_HEIGHT = 12;
+    private final int GRID_SIZE = 50;
     private Tile[] grid;
     private WaveFrontAlgorithm waveFrontAlgorithm = new WaveFrontAlgorithm(GRID_WIDTH, GRID_HEIGHT);
     private ArrayList<Particle> particles = new ArrayList<>();
@@ -63,10 +64,13 @@ public class ParticleFlow extends Application {
     }
 
     private void createParticles(int amount) {
-        for (int i = 0; i < amount; i++) {
+        while (amount >= 0) {
             double x = Math.random() * (GRID_WIDTH - 3) + 1.5;
             double y = Math.random() * (GRID_HEIGHT - 3) + 1.5;
-                particles.add(new Particle(new Vector2D(x * GRID_SIZE, y * GRID_SIZE), 10, Color.YELLOW, AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.1f)));
+            if (grid[(int) (x * GRID_HEIGHT + y)] instanceof TraversableTile) {
+                particles.add(new Particle(new Vector2D(x * GRID_SIZE, y * GRID_SIZE), 10, Color.YELLOW, AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.25f)));
+                amount--;
+            }
         }
     }
 
@@ -76,7 +80,7 @@ public class ParticleFlow extends Application {
             for (int y = 0; y < GRID_HEIGHT; y++) {
                 // Create borders
                 if (x == 0 || x == GRID_WIDTH - 1 || y == 0 || y == GRID_HEIGHT - 1
-//                        || Math.random() > .80
+                        || Math.random() > .80
                 )
                     grid[x * GRID_HEIGHT + y] = new NonTraversableTile(new Point(x, y), GRID_SIZE);
                 else
@@ -91,6 +95,8 @@ public class ParticleFlow extends Application {
     }
 
     private void changeGoalPosition(Point goalPoint) {
+        if (waveFrontAlgorithm.isOutOfBounds(goalPoint.x, goalPoint.y))
+            return;
         if (grid[goalPoint.x * GRID_HEIGHT + goalPoint.y].getDistance() == -1)
             return;
 
@@ -115,18 +121,58 @@ public class ParticleFlow extends Application {
     }
 
     private void update(double deltaTime) {
+        applyForce();
         for (Particle particle : particles) {
+            particle.update(deltaTime);
+        }
+        solveCollisions();
+    }
+
+    private void applyForce() {
+        for (Iterator<Particle> iterator = particles.iterator(); iterator.hasNext(); ) {
+            Particle particle = iterator.next();
             int x = (int) Math.floor(particle.getPosition().getX() / GRID_SIZE);
             int y = (int) Math.floor(particle.getPosition().getY() / GRID_SIZE);
 
             if (waveFrontAlgorithm.isOutOfBounds(x, y)) {
-                x = GRID_WIDTH / 2;
-                y = GRID_HEIGHT / 2;
+                iterator.remove();
+                continue;
             }
+
             particle.applyForce(grid[x * GRID_HEIGHT + y].getDirectionVector());
-            particle.update(deltaTime);
-//            if (waveFrontAlgorithm.isOutOfBounds((int) (particle.getPosition().getX() / GRID_SIZE), (int) (particle.getPosition().getY() / GRID_SIZE)))
-//                particle.setPosition(new Vector2D((GRID_WIDTH / 2.0) * GRID_SIZE, (GRID_HEIGHT / 2.0) * GRID_SIZE));
+            particle.applyForce(new Vector2D(Math.random() * 2 - 1, Math.random() * 2 - 1));
+        }
+    }
+
+    private void solveCollisions() {
+        for (Particle particle : particles) {
+            for (Tile tile : grid) {
+                if (tile instanceof NonTraversableTile) {
+                    Rectangle2D tileRec = tile.getShape().getBounds2D();
+                    Rectangle2D particleRec = particle.getShape().getBounds2D();
+
+                    // Collision LEFT SIDE
+                    if (tileRec.contains(particleRec.getX(), particleRec.getCenterY())) {
+//                        particle.movePosition(new Vector2D(tileRec.getX() + tileRec.getWidth() + particleRec.getWidth() / 2, particleRec.getCenterY()));
+                        particle.setPositionX(tileRec.getX() + tileRec.getWidth() + particleRec.getWidth() / 2);
+                    }
+                    // Collision RIGHT SIDE
+                    if (tileRec.contains(particleRec.getX() + particleRec.getWidth(), particleRec.getCenterY())) {
+//                        particle.movePosition(new Vector2D(tileRec.getX() - particleRec.getWidth() / 2, particleRec.getCenterY()));
+                        particle.setPositionX(tileRec.getX() - particleRec.getWidth() / 2);
+                    }
+                    // Collision TOP
+                    if (tileRec.contains(particleRec.getCenterX(), particleRec.getY())) {
+//                        particle.movePosition(new Vector2D(particleRec.getCenterX(), tileRec.getY() + tileRec.getHeight() + particleRec.getHeight()/2));
+                        particle.setPositionY(tileRec.getY() + tileRec.getHeight() + particleRec.getHeight() / 2);
+                    }
+                    // Collision BOTTOM
+                    if (tileRec.contains(particleRec.getCenterX(), particleRec.getY() + particleRec.getHeight())) {
+//                        particle.movePosition(new Vector2D(particleRec.getCenterX(), tileRec.getY() - particleRec.getHeight()/2));
+                        particle.setPositionY(tileRec.getY() - particleRec.getHeight() / 2);
+                    }
+                }
+            }
         }
     }
 }

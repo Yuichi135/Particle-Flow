@@ -46,7 +46,8 @@ public class NonTraversableTile implements Tile {
         graphics.setColor(Color.WHITE);
     }
 
-    private Shape getShape() {
+    @Override
+    public Shape getShape() {
         return new Rectangle2D.Double(position.x * size, position.y * size, size, size);
     }
 }

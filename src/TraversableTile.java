@@ -34,6 +34,8 @@ public class TraversableTile implements Tile {
 
     @Override
     public Vector2D getDirectionVector() {
+        if (distance == Double.POSITIVE_INFINITY)
+            return null;
         return directionVector;
     }
 
@@ -59,7 +61,12 @@ public class TraversableTile implements Tile {
         double y = position.getY() * size + size/2.0;
 
 //        System.out.println(directionVector);
-//        graphics.draw(new Rectangle2D.Double(x - 2, y - 2, 4, 4));
-//        graphics.draw(new Line2D.Double(x, y, x + directionVector.getX(), y + directionVector.getY()));
+        graphics.draw(new Rectangle2D.Double(x - 2, y - 2, 4, 4));
+        graphics.draw(new Line2D.Double(x, y, x + directionVector.getX(), y + directionVector.getY()));
+    }
+
+    @Override
+    public Shape getShape() {
+        return new Rectangle2D.Double(position.x * size, position.y * size, size, size);
     }
 }
