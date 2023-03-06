@@ -1,6 +1,9 @@
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.PriorityQueue;
+import java.util.Vector;
+import java.util.stream.Collectors;
 
 public class WaveFrontAlgorithm {
     private final int width;
@@ -38,6 +41,10 @@ public class WaveFrontAlgorithm {
                 diagonalNeighbour.setDistance(activeTile.getDistance() + Math.sqrt(2));
                 queue.add(diagonalNeighbour);
             }
+        }
+
+        for (Tile tile : grid) {
+            calculateDirectionVectors(grid, tile);
         }
     }
 
@@ -79,13 +86,70 @@ public class WaveFrontAlgorithm {
         return neighbours;
     }
 
+    private ArrayList<Tile> getAllNeighbours(Tile[] grid, Tile tile) {
+        ArrayList<Tile> neighbours = new ArrayList<>();
+
+        neighbours.addAll(getDirectNeighbours(grid, tile));
+        neighbours.addAll(getDiagonalNeighbours(grid, tile));
+
+        return neighbours;
+    }
+
+    private void calculateDirectionVectors(Tile[] grid, Tile tile) {
+        if (tile.getDistance() == -1)
+            return;
+
+        ArrayList<Tile> directNeighbours = (ArrayList<Tile>) getDirectNeighbours(grid, tile).stream().filter(neighbour -> neighbour.getDistance() != -1).collect(Collectors.toList());
+
+        Vector2D directionVector = new Vector2D();
+        Vector2D diagonalDirectionVector = new Vector2D();
+
+        if (directNeighbours.size() == 4) {
+            directionVector.setX(directNeighbours.get(0).getDistance() - directNeighbours.get(1).getDistance());
+            directionVector.setY(directNeighbours.get(2).getDistance() - directNeighbours.get(3).getDistance());
+        } else {
+            ArrayList<Tile> allNeighbours = (ArrayList<Tile>) getAllNeighbours(grid, tile).stream().filter(neighbour -> neighbour.getDistance() != -1).collect(Collectors.toList());
+
+            Tile closest = allNeighbours.get(0);
+            for (Tile neighbour : allNeighbours) {
+                if (closest.getDistance() > neighbour.getDistance())
+                    closest = neighbour;
+            }
+
+            if (tile.getDistance() == 0) {
+                tile.setDirectionVector(directionVector);
+                return;
+            }
+
+            directionVector.setLocation(tile.getPosition());
+            directionVector.subtract(closest.getPosition());
+        }
+
+
+        ArrayList<Tile> diagonalNeighbours = getDiagonalNeighbours(grid, tile);
+        if (diagonalNeighbours.size() == 4) {
+            double forceTop = diagonalNeighbours.get(0).getDistance() + diagonalNeighbours.get(2).getDistance();
+            double forceBottom = diagonalNeighbours.get(1).getDistance() + diagonalNeighbours.get(3).getDistance();
+            double forceLeft = diagonalNeighbours.get(0).getDistance() + diagonalNeighbours.get(1).getDistance();
+            double forceRight = diagonalNeighbours.get(2).getDistance() + diagonalNeighbours.get(3).getDistance();
+
+            diagonalDirectionVector.setX(forceBottom - forceTop);
+            diagonalDirectionVector.setY(forceLeft - forceRight);
+            diagonalDirectionVector.rotate(-90);
+        }
+
+        directionVector.add(diagonalDirectionVector);
+        directionVector.setLength(10);
+        tile.setDirectionVector(directionVector);
+    }
+
     private boolean isAccessible(Tile[] grid, int x, int y, int relativeX, int relativeY) {
         return (grid[(x - relativeX) * height + y].getDistance() != -1 && grid[x * height + y - relativeY].getDistance() != -1);
-//        return (grid[(/x - relativeX) * height + y].getDistance() != -1);
     }
 
     private boolean isOutOfBounds(int x, int y) {
-        return (x < 0 || y < 0 || x > width || y > height);
+        return (x < 0 || y < 0 || x > width || y > height
+                || x * y > (width * height) - 1 || x * height + y > (width * height) - 1);
     }
 
     private void resetGrid(Tile[] grid) {

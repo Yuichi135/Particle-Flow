@@ -3,6 +3,7 @@ import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import org.jfree.fx.FXGraphics2D;
@@ -11,9 +12,9 @@ import java.awt.*;
 
 public class ParticleFlow extends Application {
     private FXGraphics2D graphics;
-    private final int GRID_WIDTH = 50;
-    private final int GRID_HEIGHT = 25;
-    private final int GRID_SIZE = 25;
+    private final int GRID_WIDTH = 25;
+    private final int GRID_HEIGHT = 12;
+    private final int GRID_SIZE = 50;
     private Tile[] grid;
     private WaveFrontAlgorithm waveFrontAlgorithm = new WaveFrontAlgorithm(GRID_WIDTH, GRID_HEIGHT);
 
@@ -23,6 +24,7 @@ public class ParticleFlow extends Application {
         stage.setScene(new Scene(new Group(canvas)));
         stage.setTitle("Particle Flow");
         stage.show();
+        canvas.requestFocus();
 
         graphics = new FXGraphics2D(canvas.getGraphicsContext2D());
         graphics.setBackground(Color.BLACK);
@@ -44,6 +46,11 @@ public class ParticleFlow extends Application {
 
         initGrid();
 
+        canvas.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.R)
+                initGrid();
+        });
+
         canvas.setOnMouseClicked(this::changeGoalPosition);
         canvas.setOnMouseDragged(this::changeGoalPosition);
     }
@@ -53,7 +60,9 @@ public class ParticleFlow extends Application {
         for (int x = 0; x < GRID_WIDTH; x++) {
             for (int y = 0; y < GRID_HEIGHT; y++) {
                 // Create borders
-                if (x == 0 || x == GRID_WIDTH - 1 || y == 0 || y == GRID_HEIGHT - 1 || Math.random() > .6)
+                if (x == 0 || x == GRID_WIDTH - 1 || y == 0 || y == GRID_HEIGHT - 1
+//                        || Math.random() > .6
+                )
                     grid[x * GRID_HEIGHT + y] = new NonTraversableTile(new Point(x, y), GRID_SIZE);
                 else
                     grid[x * GRID_HEIGHT + y] = new TraversableTile(new Point(x, y), GRID_SIZE);
