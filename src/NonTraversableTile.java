@@ -2,14 +2,20 @@ import org.jfree.fx.FXGraphics2D;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
+import java.util.Comparator;
 
 public class NonTraversableTile implements Tile {
-    private Vector2D position;
+    private Point position;
     private int size;
 
-    public NonTraversableTile(Vector2D position, int size) {
+    public NonTraversableTile(Point position, int size) {
         this.position = position;
         this.size = size;
+    }
+
+    @Override
+    public void setDistance(double distance) {
+
     }
 
     @Override
@@ -18,11 +24,16 @@ public class NonTraversableTile implements Tile {
     }
 
     @Override
+    public Point getPosition() {
+        return position;
+    }
+
+    @Override
     public void draw(FXGraphics2D graphics) {
         graphics.fill(getShape());
     }
 
     private Shape getShape() {
-        return new Rectangle2D.Double(position.getX() * size, position.getY() * size, size, size);
+        return new Rectangle2D.Double(position.x * size, position.y * size, size, size);
     }
 }

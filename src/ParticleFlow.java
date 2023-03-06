@@ -3,6 +3,7 @@ import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import org.jfree.fx.FXGraphics2D;
 
@@ -14,6 +15,7 @@ public class ParticleFlow extends Application {
     private final int GRID_HEIGHT = 25;
     private final int GRID_SIZE = 25;
     private Tile[] grid;
+    private WaveFrontAlgorithm waveFrontAlgorithm = new WaveFrontAlgorithm(GRID_WIDTH, GRID_HEIGHT);
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -41,20 +43,38 @@ public class ParticleFlow extends Application {
         }.start();
 
         initGrid();
+
+        canvas.setOnMouseClicked(this::changeGoalPosition);
+        canvas.setOnMouseDragged(this::changeGoalPosition);
     }
 
     private void initGrid() {
-        grid = new NonTraversableTile[GRID_WIDTH * GRID_HEIGHT];
+        grid = new Tile[GRID_WIDTH * GRID_HEIGHT];
         for (int x = 0; x < GRID_WIDTH; x++) {
             for (int y = 0; y < GRID_HEIGHT; y++) {
                 // Create borders
-                if (x == 0 || x == GRID_WIDTH - 1 || y == 0 || y == GRID_HEIGHT - 1)
-                    grid[x * GRID_HEIGHT + y] = new NonTraversableTile(new Vector2D(x, y), GRID_SIZE);
+                if (x == 0 || x == GRID_WIDTH - 1 || y == 0 || y == GRID_HEIGHT - 1 || Math.random() > .6)
+                    grid[x * GRID_HEIGHT + y] = new NonTraversableTile(new Point(x, y), GRID_SIZE);
+                else
+                    grid[x * GRID_HEIGHT + y] = new TraversableTile(new Point(x, y), GRID_SIZE);
             }
         }
     }
 
+    private  void changeGoalPosition(MouseEvent mouseEvent) {
+        Point goalPoint = new Point((int) (mouseEvent.getX() / GRID_SIZE), (int) (mouseEvent.getY() / GRID_SIZE));
+        changeGoalPosition(goalPoint);
+    }
+
+    private void changeGoalPosition(Point goalPoint) {
+        if (grid[goalPoint.x * GRID_HEIGHT + goalPoint.y].getDistance() == -1)
+            return;
+
+        waveFrontAlgorithm.updateGrid(grid, goalPoint);
+    }
+
     private void draw() {
+        graphics.clearRect(0, 0, GRID_WIDTH * GRID_SIZE, GRID_HEIGHT * GRID_SIZE);
         for (int x = 0; x < GRID_WIDTH; x++) {
             for (int y = 0; y < GRID_HEIGHT; y++) {
                 if (grid[x * GRID_HEIGHT + y] != null) grid[x * GRID_HEIGHT + y].draw(graphics);

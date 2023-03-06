@@ -1,15 +1,20 @@
 import org.jfree.fx.FXGraphics2D;
 
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+import java.util.Comparator;
+
 public class TraversableTile implements Tile {
-    private Vector2D position;
+    private Point position;
     private int size;
     private double distance;
 
-    public TraversableTile(Vector2D position, int size) {
+    public TraversableTile(Point position, int size) {
         this.position = position;
         this.size = size;
     }
 
+    @Override
     public void setDistance(double distance) {
         this.distance = distance;
     }
@@ -20,7 +25,18 @@ public class TraversableTile implements Tile {
     }
 
     @Override
-    public void draw(FXGraphics2D graphics) {
+    public Point getPosition() {
+        return position;
+    }
 
+    @Override
+    public void draw(FXGraphics2D graphics) {
+        if (distance == Double.POSITIVE_INFINITY)
+            return;
+
+        graphics.setColor(Color.getHSBColor((float) (distance / 50), 1,1));
+        graphics.fill(new Rectangle2D.Double(position.x * size, position.y * size, size, size));
+        graphics.setColor(Color.WHITE);
+        graphics.drawString(Math.round(distance * 100) / 100.0 + "", position.x * size, (position.y    * size + graphics.getFont().getSize()));
     }
 }
