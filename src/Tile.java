@@ -8,6 +8,6 @@ public interface Tile {
     Point getPosition();
     Vector2D getDirectionVector();
     void setDirectionVector(Vector2D vector);
-    void draw(FXGraphics2D graphics);
+    void draw(FXGraphics2D graphics, int mode);
     Shape getShape();
 }

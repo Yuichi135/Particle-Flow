@@ -53,7 +53,7 @@ public class Particle {
 
     public void applyForce(Vector2D force) {
         if (force != null)
-            acceleration.add(VectorMath.scale(force, 250));
+            acceleration.add(VectorMath.scale(force, 100));
     }
 
     public void draw(FXGraphics2D graphics) {

@@ -1,3 +1,4 @@
+import com.sun.xml.internal.ws.addressing.WsaTubeHelperImpl;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Group;
@@ -15,13 +16,18 @@ import java.util.Iterator;
 
 public class ParticleFlow extends Application {
     private FXGraphics2D graphics;
-    private final int GRID_WIDTH = 25;
-    private final int GRID_HEIGHT = 12;
-    private final int GRID_SIZE = 50;
+    private final int GRID_WIDTH = 100;
+    private final int GRID_HEIGHT = 50;
+    private final int GRID_SIZE = 12;
     private Tile[] grid;
     private WaveFrontAlgorithm waveFrontAlgorithm = new WaveFrontAlgorithm(GRID_WIDTH, GRID_HEIGHT);
     private ArrayList<Particle> particles = new ArrayList<>();
     private Point goalPoint = new Point();
+    private int strokeWidth = 1;
+    private int collisionChecks;
+    private long drawTime;
+    private long updateTime;
+    private int debugMode = 0;
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -45,19 +51,41 @@ public class ParticleFlow extends Application {
                 double deltaTime = (now - last) / 1000000000.0;
                 update(deltaTime);
                 last = now;
-                draw();
+                draw(deltaTime);
             }
         }.start();
 
         initGrid();
 
         canvas.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.R) {
-                initGrid();
-                if (event.isShiftDown())
+            switch (event.getCode()) {
+                case C:
                     particles.clear();
-            } else if (event.getCode() == KeyCode.SPACE)
-                createParticles(100);
+                    break;
+                case R:
+                    initGrid();
+                    break;
+                case SPACE:
+                    createParticles(100);
+                    break;
+                case UP:
+                    if (strokeWidth < 5)
+                        strokeWidth++;
+                    break;
+                case DOWN:
+                    if (strokeWidth > 1)
+                        strokeWidth--;
+                    break;
+                case Q:
+                    debugMode ^= 0b001;
+                    break;
+                case W:
+                    debugMode ^= 0b010;
+                    break;
+                case E:
+                    debugMode ^= 0b100;
+                    break;
+            }
         });
 
         canvas.setOnMousePressed(this::mouseEvent);
@@ -65,7 +93,7 @@ public class ParticleFlow extends Application {
     }
 
     private void createParticles(int amount) {
-        while (amount >= 0) {
+        while (amount > 0) {
             double x = Math.random() * (GRID_WIDTH - 3) + 1.5;
             double y = Math.random() * (GRID_HEIGHT - 3) + 1.5;
             if (grid[(int) (x * GRID_HEIGHT + y)] instanceof TraversableTile) {
@@ -81,7 +109,7 @@ public class ParticleFlow extends Application {
             for (int y = 0; y < GRID_HEIGHT; y++) {
                 // Create borders
                 if (x == 0 || x == GRID_WIDTH - 1 || y == 0 || y == GRID_HEIGHT - 1
-                        || Math.random() > .80
+//                        || Math.random() > .80
                 )
                     grid[x * GRID_HEIGHT + y] = new NonTraversableTile(new Point(x, y), GRID_SIZE);
                 else
@@ -104,12 +132,22 @@ public class ParticleFlow extends Application {
     }
 
     private void placeTile(Point location) {
-        grid[location.x * GRID_HEIGHT + location.y] = new NonTraversableTile(location, GRID_SIZE);
+        for (int x = 0; x < strokeWidth; x++) {
+            for (int y = 0; y < strokeWidth; y++) {
+                if (!waveFrontAlgorithm.isOutOfBounds(location.x + x, location.y + y))
+                    grid[(location.x + x) * GRID_HEIGHT + location.y + y] = new NonTraversableTile(new Point(location.x + x, location.y + y), GRID_SIZE);
+            }
+        }
         waveFrontAlgorithm.updateGrid(grid, goalPoint);
     }
 
     private void removeTile(Point location) {
-        grid[location.x * GRID_HEIGHT + location.y] = new TraversableTile(location, GRID_SIZE);
+        for (int x = 0; x < strokeWidth; x++) {
+            for (int y = 0; y < strokeWidth; y++) {
+                if (!waveFrontAlgorithm.isOutOfBounds(location.x + x, location.y + y))
+                    grid[(location.x + x) * GRID_HEIGHT + location.y + y] = new TraversableTile(new Point(location.x + x, location.y + y), GRID_SIZE);
+            }
+        }
         waveFrontAlgorithm.updateGrid(grid, goalPoint);
     }
 
@@ -127,29 +165,53 @@ public class ParticleFlow extends Application {
         waveFrontAlgorithm.updateGrid(grid, goalPoint);
     }
 
-    private void draw() {
+    private void drawOverlay(double deltaTime) {
+        int fontSize = graphics.getFont().getSize();
+        graphics.setColor(Color.GRAY);
+        graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.75f));
+        graphics.fill(new Rectangle2D.Double(0, 0, 175, fontSize * 10));
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("FPS:\t\t\t\t" + Math.round(1 / deltaTime * 10) / 10.0 + "\n");
+        sb.append("DrawTime:\t\t" + Math.round(drawTime * 10) / 10.0 + "ms\n");
+        sb.append("UpdateTime:\t\t" + Math.round(updateTime * 10) / 10.0 + "ms\n");
+        sb.append("Particles:\t\t\t" + particles.size() + "\n");
+        sb.append("CollisionChecks:\t" + collisionChecks + "\n");
+        sb.append("StrokeWidth:\t\t" + strokeWidth + "\n");
+        sb.append("Debug mode:\t\t" + Integer.toBinaryString(debugMode) + "\n");
+
+        graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f));
+        graphics.setColor(Color.BLACK);
+        graphics.drawString(sb.toString(), 0, fontSize);
+
+        graphics.setColor(Color.WHITE);
+    }
+
+    private void draw(double deltaTime) {
+        long startTime = System.currentTimeMillis();
         graphics.clearRect(0, 0, GRID_WIDTH * GRID_SIZE, GRID_HEIGHT * GRID_SIZE);
         for (int x = 0; x < GRID_WIDTH; x++) {
             for (int y = 0; y < GRID_HEIGHT; y++) {
-                if (grid[x * GRID_HEIGHT + y] != null) grid[x * GRID_HEIGHT + y].draw(graphics);
+                if (grid[x * GRID_HEIGHT + y] != null) grid[x * GRID_HEIGHT + y].draw(graphics, debugMode);
             }
         }
-
-        graphics.setColor(Color.BLACK);
-        graphics.drawString("Particles:\t" + particles.size(), 0, graphics.getFont().getSize() * 2);
-        graphics.setColor(Color.WHITE);
         for (Iterator<Particle> iterator = particles.iterator(); iterator.hasNext(); ) {
             Particle particle = iterator.next();
             particle.draw(graphics);
         }
+
+        drawTime = System.currentTimeMillis() - startTime;
+        drawOverlay(deltaTime);
     }
 
     private void update(double deltaTime) {
+        long startTime = System.currentTimeMillis();
         applyForce();
         for (Particle particle : particles) {
             particle.update(deltaTime);
         }
         solveCollisions();
+        updateTime = System.currentTimeMillis() - startTime;
     }
 
     private void applyForce() {
@@ -169,11 +231,14 @@ public class ParticleFlow extends Application {
     }
 
     private void solveCollisions() {
+        collisionChecks = 0;
         for (Particle particle : particles) {
             for (Tile tile : grid) {
                 if (tile instanceof NonTraversableTile) {
                     Rectangle2D tileRec = tile.getShape().getBounds2D();
                     Rectangle2D particleRec = particle.getShape().getBounds2D();
+
+                    collisionChecks += 4;
 
                     // Collision LEFT SIDE
                     if (tileRec.contains(particleRec.getX(), particleRec.getCenterY())) {
