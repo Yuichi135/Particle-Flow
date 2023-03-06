@@ -33,6 +33,11 @@ public class TraversableTile implements Tile {
     }
 
     @Override
+    public Vector2D getDirectionVector() {
+        return directionVector;
+    }
+
+    @Override
     public void setDirectionVector(Vector2D vector) {
         this.directionVector = vector;
     }
@@ -42,10 +47,10 @@ public class TraversableTile implements Tile {
         if (distance == Double.POSITIVE_INFINITY)
             return;
 
-        graphics.setColor(Color.getHSBColor((float) (distance / 100), 1,1));
-        graphics.fill(new Rectangle2D.Double(position.x * size, position.y * size, size, size));
-        graphics.setColor(Color.WHITE);
-        graphics.drawString(Math.round(distance * 100) / 100.0 + "", position.x * size, (position.y    * size + graphics.getFont().getSize()));
+//        graphics.setColor(Color.getHSBColor((float) (distance / 100), 1,1));
+//        graphics.fill(new Rectangle2D.Double(position.x * size, position.y * size, size, size));
+//        graphics.setColor(Color.WHITE);
+//        graphics.drawString(Math.round(distance * 100) / 100.0 + "", position.x * size, (position.y    * size + graphics.getFont().getSize()));
 
 //        if (directionVector.getY() == 0.0 && directionVector.getX() == 0.0)
 //            return;
@@ -54,7 +59,7 @@ public class TraversableTile implements Tile {
         double y = position.getY() * size + size/2.0;
 
 //        System.out.println(directionVector);
-        graphics.draw(new Rectangle2D.Double(x - 2, y - 2, 4, 4));
-        graphics.draw(new Line2D.Double(x, y, x + directionVector.getX(), y + directionVector.getY()));
+//        graphics.draw(new Rectangle2D.Double(x - 2, y - 2, 4, 4));
+//        graphics.draw(new Line2D.Double(x, y, x + directionVector.getX(), y + directionVector.getY()));
     }
 }

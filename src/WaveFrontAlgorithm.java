@@ -102,6 +102,11 @@ public class WaveFrontAlgorithm {
         Vector2D directionVector = new Vector2D();
         Vector2D diagonalDirectionVector = new Vector2D();
 
+        if (tile.getDistance() == 0) {
+            tile.setDirectionVector(directionVector);
+            return;
+        }
+
         if (directNeighbours.size() == 4) {
             directionVector.setX(directNeighbours.get(0).getDistance() - directNeighbours.get(1).getDistance());
             directionVector.setY(directNeighbours.get(2).getDistance() - directNeighbours.get(3).getDistance());
@@ -129,11 +134,6 @@ public class WaveFrontAlgorithm {
                     closest = neighbour;
             }
 
-            if (tile.getDistance() == 0) {
-                tile.setDirectionVector(directionVector);
-                return;
-            }
-
             directionVector.setLocation(tile.getPosition());
             directionVector.subtract(closest.getPosition());
             directionVector.scale(-1);
@@ -148,7 +148,7 @@ public class WaveFrontAlgorithm {
         return (grid[(x - relativeX) * height + y].getDistance() != -1 && grid[x * height + y - relativeY].getDistance() != -1);
     }
 
-    private boolean isOutOfBounds(int x, int y) {
+    public boolean isOutOfBounds(int x, int y) {
         return (x < 0 || y < 0 || x > width || y > height
                 || x * y > (width * height) - 1 || x * height + y > (width * height) - 1);
     }

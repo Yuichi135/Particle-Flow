@@ -29,6 +29,11 @@ public class NonTraversableTile implements Tile {
     }
 
     @Override
+    public Vector2D getDirectionVector() {
+        return null;
+    }
+
+    @Override
     public void setDirectionVector(Vector2D vector) {
 
     }
