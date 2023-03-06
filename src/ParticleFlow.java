@@ -21,6 +21,7 @@ public class ParticleFlow extends Application {
     private Tile[] grid;
     private WaveFrontAlgorithm waveFrontAlgorithm = new WaveFrontAlgorithm(GRID_WIDTH, GRID_HEIGHT);
     private ArrayList<Particle> particles = new ArrayList<>();
+    private Point goalPoint = new Point();
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -59,8 +60,8 @@ public class ParticleFlow extends Application {
                 createParticles(100);
         });
 
-        canvas.setOnMouseClicked(this::changeGoalPosition);
-        canvas.setOnMouseDragged(this::changeGoalPosition);
+        canvas.setOnMousePressed(this::mouseEvent);
+        canvas.setOnMouseDragged(this::mouseEvent);
     }
 
     private void createParticles(int amount) {
@@ -89,8 +90,31 @@ public class ParticleFlow extends Application {
         }
     }
 
+    private void mouseEvent(MouseEvent e) {
+        if (e.isShiftDown()) {
+            Point mouseLocation = new Point((int) (e.getX() / GRID_SIZE), (int) (e.getY() / GRID_SIZE));
+            if (e.isPrimaryButtonDown())
+                placeTile(mouseLocation);
+            else if (e.isSecondaryButtonDown())
+                removeTile(mouseLocation);
+
+        } else {
+            changeGoalPosition(e);
+        }
+    }
+
+    private void placeTile(Point location) {
+        grid[location.x * GRID_HEIGHT + location.y] = new NonTraversableTile(location, GRID_SIZE);
+        waveFrontAlgorithm.updateGrid(grid, goalPoint);
+    }
+
+    private void removeTile(Point location) {
+        grid[location.x * GRID_HEIGHT + location.y] = new TraversableTile(location, GRID_SIZE);
+        waveFrontAlgorithm.updateGrid(grid, goalPoint);
+    }
+
     private void changeGoalPosition(MouseEvent mouseEvent) {
-        Point goalPoint = new Point((int) (mouseEvent.getX() / GRID_SIZE), (int) (mouseEvent.getY() / GRID_SIZE));
+        goalPoint = new Point((int) (mouseEvent.getX() / GRID_SIZE), (int) (mouseEvent.getY() / GRID_SIZE));
         changeGoalPosition(goalPoint);
     }
 
