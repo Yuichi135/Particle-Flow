@@ -297,9 +297,6 @@ public class ParticleFlow extends Application {
 
         for (int relativeX = -1; relativeX <= 1; relativeX++) {
             for (int relativeY = -1; relativeY <= 1; relativeY++) {
-                if (relativeX == 0 && relativeY == 0)
-                    continue;
-
                 int x = relativeX + location.x;
                 int y = relativeY + location.y;
 
