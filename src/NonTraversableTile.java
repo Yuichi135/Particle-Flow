@@ -41,9 +41,13 @@ public class NonTraversableTile implements Tile {
     @Override
     public void draw(FXGraphics2D graphics, int mode) {
         graphics.fill(getShape());
-//        graphics.setColor(Color.BLACK);
-//        graphics.drawString(position.x + ", " + position.y, position.x * size, (position.y    * size + graphics.getFont().getSize()));
-//        graphics.setColor(Color.WHITE);
+
+        if (mode == 1) {
+            graphics.setColor(Color.GREEN);
+            graphics.draw(getShape());
+            graphics.setColor(Color.WHITE);
+        }
+
     }
 
     @Override

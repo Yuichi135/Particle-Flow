@@ -1,4 +1,5 @@
 import com.sun.xml.internal.ws.addressing.WsaTubeHelperImpl;
+import com.sun.xml.internal.ws.wsdl.writer.document.Part;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.Group;
@@ -10,9 +11,12 @@ import javafx.stage.Stage;
 import org.jfree.fx.FXGraphics2D;
 
 import java.awt.*;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.stream.Collectors;
 
 public class ParticleFlow extends Application {
     private FXGraphics2D graphics;
@@ -66,7 +70,7 @@ public class ParticleFlow extends Application {
                     initGrid();
                     break;
                 case SPACE:
-                    createParticles(100);
+                    createParticles(10000);
                     break;
                 case UP:
                     if (strokeWidth < 5)
@@ -232,36 +236,80 @@ public class ParticleFlow extends Application {
 
     private void solveCollisions() {
         collisionChecks = 0;
+        ArrayList<Particle>[] particleGrid = new ArrayList[GRID_WIDTH * GRID_HEIGHT];
+
         for (Particle particle : particles) {
-            for (Tile tile : grid) {
-                if (tile instanceof NonTraversableTile) {
-                    Rectangle2D tileRec = tile.getShape().getBounds2D();
-                    Rectangle2D particleRec = particle.getShape().getBounds2D();
+            int x = (int) Math.floor(particle.getPosition().getX() / GRID_SIZE);
+            int y = (int) Math.floor(particle.getPosition().getY() / GRID_SIZE);
 
-                    collisionChecks += 4;
+            if (waveFrontAlgorithm.isOutOfBounds(x, y))
+                continue;
 
-                    // Collision LEFT SIDE
-                    if (tileRec.contains(particleRec.getX(), particleRec.getCenterY())) {
-//                        particle.movePosition(new Vector2D(tileRec.getX() + tileRec.getWidth() + particleRec.getWidth() / 2, particleRec.getCenterY()));
-                        particle.setPositionX(tileRec.getX() + tileRec.getWidth() + particleRec.getWidth() / 2);
-                    }
-                    // Collision RIGHT SIDE
-                    if (tileRec.contains(particleRec.getX() + particleRec.getWidth(), particleRec.getCenterY())) {
-//                        particle.movePosition(new Vector2D(tileRec.getX() - particleRec.getWidth() / 2, particleRec.getCenterY()));
-                        particle.setPositionX(tileRec.getX() - particleRec.getWidth() / 2);
-                    }
-                    // Collision TOP
-                    if (tileRec.contains(particleRec.getCenterX(), particleRec.getY())) {
-//                        particle.movePosition(new Vector2D(particleRec.getCenterX(), tileRec.getY() + tileRec.getHeight() + particleRec.getHeight()/2));
-                        particle.setPositionY(tileRec.getY() + tileRec.getHeight() + particleRec.getHeight() / 2);
-                    }
-                    // Collision BOTTOM
-                    if (tileRec.contains(particleRec.getCenterX(), particleRec.getY() + particleRec.getHeight())) {
-//                        particle.movePosition(new Vector2D(particleRec.getCenterX(), tileRec.getY() - particleRec.getHeight()/2));
-                        particle.setPositionY(tileRec.getY() - particleRec.getHeight() / 2);
-                    }
+            int arrPos = x * GRID_HEIGHT + y;
+            if (particleGrid[arrPos] == null)
+                particleGrid[arrPos] = new ArrayList<>();
+
+            particleGrid[arrPos].add(particle);
+        }
+
+        for (int i = 0; i < particleGrid.length; i++) {
+            ArrayList<Particle> particleArrayList = particleGrid[i];
+            if (particleArrayList == null)
+                continue;
+
+            for (Particle particle : particleArrayList) {
+                for (Tile neighbour : getNeighbours(new Point((int) Math.floor(i / GRID_HEIGHT), (i % GRID_HEIGHT)))) {
+                    solveCollision(particle, neighbour);
                 }
             }
         }
+    }
+
+    private void solveCollision(Particle particle, Tile tile) {
+        if (tile instanceof TraversableTile)
+            return;
+
+        Rectangle2D tileRec = tile.getShape().getBounds2D();
+        Rectangle2D particleRec = particle.getShape().getBounds2D();
+
+        collisionChecks += 4;
+
+        // Collision LEFT SIDE
+        if (tileRec.contains(particleRec.getX(), particleRec.getCenterY())) {
+            particle.setPositionX(tileRec.getX() + tileRec.getWidth() + particleRec.getWidth() / 2);
+        }
+        // Collision RIGHT SIDE
+        if (tileRec.contains(particleRec.getX() + particleRec.getWidth(), particleRec.getCenterY())) {
+            particle.setPositionX(tileRec.getX() - particleRec.getWidth() / 2);
+        }
+        // Collision TOP
+        if (tileRec.contains(particleRec.getCenterX(), particleRec.getY())) {
+            particle.setPositionY(tileRec.getY() + tileRec.getHeight() + particleRec.getHeight() / 2);
+        }
+        // Collision BOTTOM
+        if (tileRec.contains(particleRec.getCenterX(), particleRec.getY() + particleRec.getHeight())) {
+            particle.setPositionY(tileRec.getY() - particleRec.getHeight() / 2);
+        }
+    }
+
+    private ArrayList<Tile> getNeighbours(Point location) {
+        ArrayList<Tile> neighbours = new ArrayList<>(8);
+
+        for (int relativeX = -1; relativeX <= 1; relativeX++) {
+            for (int relativeY = -1; relativeY <= 1; relativeY++) {
+                if (relativeX == 0 && relativeY == 0)
+                    continue;
+
+                int x = relativeX + location.x;
+                int y = relativeY + location.y;
+
+                if (waveFrontAlgorithm.isOutOfBounds(x, y))
+                    continue;
+
+                neighbours.add(grid[x * GRID_HEIGHT + y]);
+            }
+        }
+
+        return neighbours;
     }
 }
