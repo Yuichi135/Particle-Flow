@@ -9,8 +9,12 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import org.jfree.fx.FXGraphics2D;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -62,6 +66,11 @@ public class ParticleFlow extends Application {
                 case C:
                     particles.clear();
                     break;
+                case V:
+                    for (Tile tile : grid) {
+                        tile.setDirectionVector(new Vector2D());
+                    }
+                    break;
                 case R:
                     initGrid();
                     break;
@@ -84,6 +93,23 @@ public class ParticleFlow extends Application {
                     break;
                 case E:
                     debugMode ^= 0b100;
+                    break;
+                case T:
+                    try {
+                        BufferedImage image = ImageIO.read(new File("src/textureTest.jpg"));
+                        for (Particle particle : particles) {
+                            particle.setTexture(image);
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    break;
+                case U:
+                    Color color = Color.getHSBColor((float) Math.random(), 1, 1);
+                    for (Particle particle : particles) {
+                        particle.unsetTexture();
+                        particle.setColor(color);
+                    }
                     break;
             }
         });
@@ -109,7 +135,7 @@ public class ParticleFlow extends Application {
             for (int y = 0; y < GRID_HEIGHT; y++) {
                 // Create borders
                 if (x == 0 || x == GRID_WIDTH - 1 || y == 0 || y == GRID_HEIGHT - 1
-//                        || Math.random() > .80
+                        || Math.random() > .80
                 )
                     grid[x * GRID_HEIGHT + y] = new NonTraversableTile(new Point(x, y), GRID_SIZE);
                 else
