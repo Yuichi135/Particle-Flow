@@ -149,7 +149,7 @@ public class WaveFrontAlgorithm {
     }
 
     public boolean isOutOfBounds(int x, int y) {
-        return (x < 0 || y < 0 || x > width || y > height
+        return (x < 0 || y < 0 || x >= width || y >= height
                 || x * y > (width * height) - 1 || x * height + y > (width * height) - 1);
     }
 
